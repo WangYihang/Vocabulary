@@ -4,6 +4,19 @@
 import json
 import colorama
 import readline
+import datetime
+
+from sqlalchemy import Column, String, DateTime, Integer, create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
+class Log(Base):
+    __tablename__ = 'log'
+    id = Column(Integer, primary_key=True)
+    word = Column(String(0x100))
+    date = Column(DateTime())
 
 class Vocabulary:
     def __init__(self, filename):
@@ -60,7 +73,7 @@ class Vocabulary:
             for speech, meaning in meanings.items():
                 print("\t%s\t%s" % ("%s%s%s" % (self.speech_color[speech], speech, colorama.Style.RESET_ALL), ";".join(meaning)))
 
-def loop(vocabulary):
+def loop(vocabulary, db):
     while True:
         data = raw_input("> ").strip()
         if data == "exit":
@@ -68,11 +81,15 @@ def loop(vocabulary):
         if data not in vocabulary.get_words():
             print("No such word")
             continue
+        db.add(Log(word=data, date=datetime.datetime.now()))
+        db.commit()
+
         vocabulary.visualize({data:vocabulary.data[data]})
         symonyms = vocabulary.synonym(data)
         if len(symonyms) != 1:
             print("-" * 0x20)
             vocabulary.visualize(symonyms)
+    db.close()
 
 commands = []
 
@@ -86,12 +103,18 @@ def completer(text, state):
 def main():
     global commands
     colorama.init()
+    # Database
+    engine = create_engine('sqlite:///db.sqlite3')
+    Session = sessionmaker()
+    Session.configure(bind=engine)
+    Base.metadata.create_all(engine)
+    # Load words
     filename = "data/gee.txt.json"
     v = Vocabulary(filename)
     commands = v.get_words()
     readline.parse_and_bind("tab: complete")
     readline.set_completer(completer)
-    loop(v)
+    loop(v, Session())
 
 if __name__ == "__main__":
     main()
