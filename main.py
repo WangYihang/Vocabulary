@@ -8,6 +8,16 @@ import readline
 class Vocabulary:
     def __init__(self, filename):
         self.data = json.load(open(filename))
+        self.speech_color = {
+            "vt": colorama.Fore.GREEN,
+            "vi": colorama.Fore.GREEN,
+            "v": colorama.Fore.GREEN,
+            "conj": colorama.Fore.MAGENTA,
+            "prep": colorama.Fore.YELLOW,
+            "n": colorama.Fore.CYAN,
+            "adj": colorama.Fore.BLUE,
+            "adv": colorama.Fore.WHITE,
+        }
 
     def translate(self, target):
         result = {}
@@ -27,7 +37,7 @@ class Vocabulary:
             for _, meaning in meanings.items():
                 bucket += meaning
             for i in bucket:
-                colored = "%s%s%s" % (colorama.Fore.RED, i, colorama.Style.RESET_ALL)
+                colored = "%s%s%s" % (colorama.Fore.GREEN, i, colorama.Style.RESET_ALL)
                 key = i.encode("utf-8")
                 for word in words:
                     key = key.replace(word, "")
@@ -47,20 +57,22 @@ class Vocabulary:
     def get_words(self):
         return self.data.keys()
 
-
-def visualize(data):
-    for word, meanings in data.items():
-        print(word)
-        for speech, meaning in meanings.items():
-            print("\t%s => %s" % (speech, ";".join(meaning)))
+    def visualize(self, data):
+        for word, meanings in data.items():
+            print(word)
+            for speech, meaning in meanings.items():
+                print("\t%s\t%s" % ("%s%s%s" % (self.speech_color[speech], speech, colorama.Style.RESET_ALL), ";".join(meaning)))
 
 def loop(vocabulary):
     while True:
         data = raw_input("> ").strip()
         if data == "exit":
             break
-        visualize(vocabulary.translate(data))
-        visualize(vocabulary.synonym(data))
+        vocabulary.visualize({data:vocabulary.data[data]})
+        symonyms = vocabulary.synonym(data)
+        if len(symonyms) != 1:
+            print("-" * 0x20)
+            vocabulary.visualize(symonyms)
 
 commands = []
 
