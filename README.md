@@ -9,4 +9,4 @@ python vocabulary.py
 ```
 
 #### Example:
-![example](img/screen.png)
+![example](img/example.png)
