@@ -29,30 +29,27 @@ class Vocabulary:
         return result
 
     def synonym(self, target):
-        if target in self.data.keys():
-            meanings = self.data[target]
-            result = []
-            bucket = []
-            words = ["的", "得", "地"]
-            for _, meaning in meanings.items():
-                bucket += meaning
-            for i in bucket:
-                colored = "%s%s%s" % (colorama.Fore.GREEN, i, colorama.Style.RESET_ALL)
-                key = i.encode("utf-8")
-                for word in words:
-                    key = key.replace(word, "")
-                # Mark color
-                colored_translated = {}
-                for tword, tmeanings in self.translate(key).items():
-                    rmeaning = {}
-                    for speech, meaning in tmeanings.items():
-                        rmeaning[speech] = [j.replace(i, colored) for j in meaning]
-                    colored_translated[tword] = rmeaning
-                result += list(colored_translated.items())
-            return dict(result)
-        else:
-            print("No such word")
-            return {}
+        meanings = self.data[target]
+        result = []
+        bucket = []
+        words = ["的", "得", "地"]
+        for _, meaning in meanings.items():
+            bucket += meaning
+        for i in bucket:
+            key = i.encode("utf-8")
+            for word in words:
+                key = key.replace(word, "")
+            colored = "%s%s%s" % (colorama.Fore.GREEN, key.decode("utf-8"), colorama.Style.RESET_ALL)
+            # Mark color
+            colored_translated = {}
+            for tword, tmeanings in self.translate(key).items():
+                rmeaning = {}
+                for speech, meaning in tmeanings.items():
+                    rmeaning[speech] = [j.replace(key.decode("utf-8"), colored) for j in meaning]
+                colored_translated[tword] = rmeaning
+            result += list(colored_translated.items())
+        return dict(result)
+
 
     def get_words(self):
         return self.data.keys()
@@ -68,6 +65,9 @@ def loop(vocabulary):
         data = raw_input("> ").strip()
         if data == "exit":
             break
+        if data not in vocabulary.get_words():
+            print("No such word")
+            continue
         vocabulary.visualize({data:vocabulary.data[data]})
         symonyms = vocabulary.synonym(data)
         if len(symonyms) != 1:
