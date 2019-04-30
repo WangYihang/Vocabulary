@@ -27,10 +27,18 @@ class Vocabulary:
             for _, meaning in meanings.items():
                 bucket += meaning
             for i in bucket:
+                colored = "%s%s%s" % (colorama.Fore.RED, i, colorama.Style.RESET_ALL)
                 key = i.encode("utf-8")
                 for word in words:
                     key = key.replace(word, "")
-                result += list(self.translate(key).items())
+                # Mark color
+                colored_translated = {}
+                for tword, tmeanings in self.translate(key).items():
+                    rmeaning = {}
+                    for speech, meaning in tmeanings.items():
+                        rmeaning[speech] = [j.replace(i, colored) for j in meaning]
+                    colored_translated[tword] = rmeaning
+                result += list(colored_translated.items())
             return dict(result)
         else:
             print("No such word")
@@ -51,6 +59,7 @@ def loop(vocabulary):
         data = raw_input("> ").strip()
         if data == "exit":
             break
+        visualize(vocabulary.translate(data))
         visualize(vocabulary.synonym(data))
 
 commands = []
